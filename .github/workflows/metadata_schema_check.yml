@@ -30,7 +30,12 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Publish the latest changes
+      - name: Get changed files using defaults
+        id: changed-files
+        uses: tj-actions/changed-files@v32
+
+      - name: List all added files
         run: |
-          CHANGED_FILES_PATH=$(git diff --name-only main)
-          echo $CHANGED_FILES_PATH
+          for file in ${{ steps.changed-files.outputs.modified_files }}; do
+              echo "$file was modified."
+          done

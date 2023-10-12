@@ -79,5 +79,5 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
         with:
-          repository: ${{ needs.setmetadata.outputs.metadata).source.repository }}
-          ref: ${{ needs.setmetadata.outputs.metadata).source.tag }}
+          repository: ${{ needs.setmetadata.outputs.metadata.source.repository }}
+          ref: ${{ needs.setmetadata.outputs.metadata.source.tag }}

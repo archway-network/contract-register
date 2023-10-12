@@ -57,6 +57,10 @@ jobs:
         file: ${{ fromJSON(needs.fetch-modified-metadata.outputs.metadata_files) }}
 
     steps:
-      - name: Output
-        run: | 
-          echo ${{ matrix.file }}
+      - name: Checking out ${{ matrix.file }}
+        uses: actions/checkout@v3
+        with:
+          path: ${{ matrix.file }}
+
+      - name: Output contents of ${{ matrix.file }}
+        run: cat ${{ matrix.file }} | jq .

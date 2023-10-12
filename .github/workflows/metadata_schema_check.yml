@@ -47,7 +47,7 @@ jobs:
 
   validate-metadata:
     name: Validate the Source Builder 
-    needs: [fetch-modified-files]
+    needs: [fetch-modified-metadata]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

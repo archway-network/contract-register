@@ -40,9 +40,9 @@ jobs:
             if [ $FILE_NAME != "metadata.json" ]; then
                 continue
             fi
-            FILES_ARRAY+="$(printf "%q " $file),"
+            FILES_ARRAY+="$file,"
           done
-          FILES_ARRAY="${FILES_ARRAY%,}"
+          FILES_ARRAY=$(echo $FILES_ARRAY | jq -R -s -c 'split(",")[:-1]')
           echo "metadata_files=${FILES_ARRAY}" >> $GITHUB_OUTPUT
     outputs:
       metadata_files: ${{ toJSON(steps.setfiles.outputs.metadata_files) }}

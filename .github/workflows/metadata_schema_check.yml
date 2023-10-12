@@ -40,7 +40,7 @@ jobs:
             if [ $FILE_NAME != "metadata.json" ]; then
                 continue
             fi
-            FILES_ARRAY+="$file,"
+            FILES_ARRAY+="$(printf "%q " $file),"
           done
           FILES_ARRAY="${FILES_ARRAY%,}"
           echo "metadata_files=${FILES_ARRAY}" >> $GITHUB_OUTPUT

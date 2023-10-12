@@ -20,8 +20,8 @@ jobs:
           json_exclude_regex: ^(main|test){1}net\/\d\/(?!metadata\.json$).*
           use_gitignore: false
 
-  fetch-modified-files:
-    name: Fetch modified files
+  fetch-modified-metadata:
+    name: Fetch modified metadata
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
@@ -31,8 +31,7 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v39
 
-      - name: Set outputs
-        id: setVariables
+      - name: Set metadata files
         run: |
           FILES_ARRAY=()
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
@@ -42,18 +41,20 @@ jobs:
             fi
             FILES_ARRAY+=($file)
           done
-          echo ${FILES_ARRAY[@]}
+          echo "metadata_files=${FILES_ARRAY}" >> $GITHUB_OUTPUT
+        output:
+          metadata_files: ${{ toJSON(steps.*.outputs.metadata_files) }}
 
-  # validate-metadata:
-  #   name: Validate the Source Builder 
-  #   needs: [fetch-modified-files]
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       file: ${{needs.fetch-modified-files.outputs.matrix}}
+  validate-metadata:
+    name: Validate the Source Builder 
+    needs: [fetch-modified-files]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        file: ${{ fromJSON(needs.fetch-modified-metadata.outputs.metadata_files) }}
 
-  #   steps:
-  #     - name: Output
-  #       run: | 
-  #         echo ${{ matrix.file }}
+    steps:
+      - name: Output
+        run: | 
+          echo ${{ matrix.file }}

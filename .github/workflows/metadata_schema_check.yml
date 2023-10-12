@@ -41,7 +41,7 @@ jobs:
             fi
             FILES_ARRAY+=($file)
           done
-          echo ${{ toJSON($FILES_ARRAY) }}
+          echo ${{ toJSON(${FILES_ARRAY}) }}
           echo "metadata_files=${FILES_ARRAY}" >> $GITHUB_OUTPUT
     outputs:
       metadata_files: ${{ toJSON(steps.*.outputs.metadata_files) }}

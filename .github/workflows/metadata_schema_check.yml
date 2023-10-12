@@ -45,7 +45,7 @@ jobs:
           FILES_ARRAY=$(echo $FILES_ARRAY | jq -R -s -c 'split(",")[:-1]')
           echo "metadata_files=${FILES_ARRAY}" >> $GITHUB_OUTPUT
     outputs:
-      metadata_files: ${{ toJSON(steps.setfiles.outputs.metadata_files) }}
+      metadata_files: ${{ steps.setfiles.outputs.metadata_files }}
 
   validate-metadata:
     name: Validate the Source Builder 

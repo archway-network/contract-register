@@ -20,11 +20,13 @@ jobs:
           json_exclude_regex: ^(main|test){1}net\/\d\/(?!metadata\.json$).*
           use_gitignore: false
 
-  validate-source-builder:
-    name: Validate the Source Builder 
+  fetch-modified-files:
+    name: Fetch modified files
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
+    outputs:
+      matrix: ${{ steps.setVariables.outputs.matrix }}
 
     steps:
       - name: Get changed files
@@ -36,3 +38,20 @@ jobs:
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             echo "$file was changed"
           done
+      - name: Set outputs
+        id: setVariables
+        run: |
+          echo "::set-output name=matrix::${{ steps.changed-files.outputs.all_changed_files }}"
+
+  validate-metadata:
+    name: Validate the Source Builder 
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        file: ${{fromJson(needs.fetch-modified-files.outputs.matrix)}}
+
+    steps:
+      - name: Output
+        run: | 
+          echo ${{ matrix.file }}

@@ -24,7 +24,7 @@ jobs:
     name: Validate the Source Builder 
     runs-on: ubuntu-latest
     permissions:
-    pull-requests: read
+      pull-requests: read
 
     steps:
       - name: Get changed files

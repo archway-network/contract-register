@@ -32,6 +32,7 @@ jobs:
         uses: tj-actions/changed-files@v39
 
       - name: Set metadata files
+        id: setfiles
         run: |
           FILES_ARRAY=()
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
@@ -43,7 +44,7 @@ jobs:
           done
           echo "metadata_files=${FILES_ARRAY[@]}" >> $GITHUB_OUTPUT
     outputs:
-      metadata_files: ${{ toJSON(steps.*.outputs.metadata_files) }}
+      metadata_files: ${{ toJSON(steps.setfiles.outputs.metadata_files) }}
 
   validate-metadata:
     name: Validate the Source Builder 

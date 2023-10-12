@@ -33,11 +33,11 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v39
 
-      - name: List all changed files
-        run: |
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "$file was changed"
-          done
+      # - name: List all changed files
+      #   run: |
+      #     for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+      #       echo "$file was changed"
+      #     done
       - name: Set outputs
         id: setVariables
         run: |
@@ -50,7 +50,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        file: ${{fromJson(needs.fetch-modified-files.outputs.matrix)}}
+        file: ${{needs.fetch-modified-files.outputs.matrix}}
 
     steps:
       - name: Output

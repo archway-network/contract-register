@@ -74,7 +74,7 @@ jobs:
           if [ -z "$SOURCE_BUILDER" ]; then
               continue
           fi
-          echo "::set-output name=metadata::$CONTENTS"
+          echo "metadata=$CONTENTS" >> $GITHUB_ENV
       
       - name: Checkout source code
         uses: actions/checkout@v3

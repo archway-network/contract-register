@@ -67,7 +67,7 @@ jobs:
         id: setmetadata
         run: |
           cd metadata
-          CONTENTS=$(cat ${{ matrix.file }})
+          CONTENTS=$(cat ${{ matrix.file }} | jq .)
           SOURCE=$(cat ${{ matrix.file }} | jq -r '.source')
           if [ -z "$SOURCE" ]; then
               continue

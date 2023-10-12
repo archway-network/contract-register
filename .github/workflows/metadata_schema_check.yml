@@ -23,18 +23,16 @@ jobs:
   validate-source-builder:
     name: Validate the Source Builder 
     runs-on: ubuntu-latest
+    permissions:
+    pull-requests: read
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get changed files using defaults
+      - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v39
 
-      - name: List all added files
+      - name: List all changed files
         run: |
-          for file in ${{ steps.changed-files.outputs.modified_files }}; do
-              echo "$file was modified."
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
           done

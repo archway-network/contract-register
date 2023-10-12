@@ -27,8 +27,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Publish the latest changes
         run: |
-        CHANGED_FILES_PATH=$(git diff --name-only main)
-        echo $CHANGED_FILES_PATH
+          CHANGED_FILES_PATH=$(git diff --name-only main)
+          echo $CHANGED_FILES_PATH

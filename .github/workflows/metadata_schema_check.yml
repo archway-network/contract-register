@@ -18,5 +18,5 @@ jobs:
         with:
           base_dir: mainnet
           json_schema: ./schemas/metadata.schema.json
-          json_exclude_regex: ^(?!metadata\.json$).*
+          json_exclude_regex: ^(main|test){1}net\/\d\/(?!metadata\.json$).*
           use_gitignore: false

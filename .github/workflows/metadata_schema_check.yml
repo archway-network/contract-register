@@ -60,7 +60,7 @@ jobs:
       - name: Checking out ${{ matrix.file }}
         uses: actions/checkout@v3
         with:
-          path: ${{ matrix.file }}
+          sparse-checkout: ${{ matrix.file }}
 
       - name: Output contents of ${{ matrix.file }}
         run: cat ${{ matrix.file }} | jq .

@@ -42,7 +42,7 @@ jobs:
             FILES_ARRAY+=($file)
           done
           echo "metadata_files=${FILES_ARRAY}" >> $GITHUB_OUTPUT
-        output:
+        outputs:
           metadata_files: ${{ toJSON(steps.*.outputs.metadata_files) }}
 
   validate-metadata:

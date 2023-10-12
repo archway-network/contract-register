@@ -41,7 +41,11 @@ jobs:
       - name: Set outputs
         id: setVariables
         run: |
-          echo "::set-output name=matrix::${{ steps.changed-files.outputs.all_changed_files }}"
+          FILES_ARRAY=()
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            FILES_ARRAY+=($file)
+          done
+          echo "::set-output name=matrix::FILES_ARRAY"
 
   validate-metadata:
     name: Validate the Source Builder 

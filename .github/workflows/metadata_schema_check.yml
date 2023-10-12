@@ -60,13 +60,11 @@ jobs:
       - name: Checking out ${{ matrix.file }}
         uses: actions/checkout@v3
         with:
-          path: metadata
           sparse-checkout: ${{ matrix.file }}
 
       - name: Output contents of ${{ matrix.file }}
         id: setmetadata
         run: |
-          cd metadata
           CONTENTS=$(cat ${{ matrix.file }} | jq .)
           SOURCE=$(cat ${{ matrix.file }} | jq -r '.source')
           if [ -z "$SOURCE" ]; then
@@ -76,11 +74,10 @@ jobs:
           if [ -z "$SOURCE_BUILDER" ]; then
               continue
           fi
-          echo "metadata=${CONTENTS}" >> $GITHUB_OUTPUT
-          cd ..
+          echo "::set-output name=metadata::$CONTENTS"
       
       - name: Checkout source code
         uses: actions/checkout@v3
         with:
-          repository: ${{ fromJSON(steps.setmetadata.outputs.metadata).source.repository }}
-          ref: ${{ fromJSON(steps.setmetadata.outputs.metadata).source.tag }}
+          repository: ${{ needs.setmetadata.outputs.metadata).source.repository }}
+          ref: ${{ needs.setmetadata.outputs.metadata).source.tag }}

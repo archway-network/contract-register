@@ -19,3 +19,4 @@ jobs:
           base_dir: mainnet
           json_schema: ./schemas/metadata.schema.json
           json_exclude_regex: ^(?!metadata\.json$).*
+          use_gitignore: false

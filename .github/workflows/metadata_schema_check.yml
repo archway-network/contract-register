@@ -47,8 +47,8 @@ jobs:
     outputs:
       metadata_files: ${{ steps.setfiles.outputs.metadata_files }}
 
-  validate-metadata:
-    name: Validate the Source Builder 
+  load-metadata:
+    name: Load the code metadata
     needs: [fetch-modified-metadata]
     runs-on: ubuntu-latest
     strategy:
@@ -63,4 +63,22 @@ jobs:
           sparse-checkout: ${{ matrix.file }}
 
       - name: Output contents of ${{ matrix.file }}
-        run: cat ${{ matrix.file }} | jq .
+        id: setmetadata
+        run: |
+          CONTENTS=$(cat ${{ matrix.file }})
+          SOURCE_BUILDER=$(cat ${{ matrix.file }} | jq -r '.source_builder')
+          if [ -z "$SOURCE_BUILDER" ]; then
+              continue
+          fi
+          echo "metadata=${CONTENTS}" >> $GITHUB_OUTPUT
+    outputs:
+      metadata: ${{ toJSON(steps.setmetadata.outputs.metadata) }}
+
+  build-binary:
+    name: Build contract binary
+    needs: [load-metadata]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Output metadata
+        run: echo ${{ fromJSON(needs.load-metadata.outputs.metadata) }}

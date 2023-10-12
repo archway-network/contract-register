@@ -81,3 +81,10 @@ jobs:
         with:
           repository: ${{ needs.setmetadata.outputs.metadata.source.repository }}
           ref: ${{ needs.setmetadata.outputs.metadata.source.tag }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build the binary
+        run: |
+        docker run --rm -v "$(pwd)":/code --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry   ${{ needs.setmetadata.outputs.metadata.source_builder.image }}:${{ needs.setmetadata.outputs.metadata.source_builder.tag }}

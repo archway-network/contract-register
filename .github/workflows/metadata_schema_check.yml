@@ -1,4 +1,4 @@
-name: Metadata schema check
+name: Metadata Check
 
 on:
   push: 
@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  validate-json:
+  validate-json-schema:
+    name: Validate the Metadata JSON schema
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      
+      - uses: actions/checkout@v3  
       - name: Validate JSON
         uses: GrantBirki/json-yaml-validate@v2.3.1
         with:
@@ -20,3 +20,15 @@ jobs:
           json_schema: ./schemas/metadata.schema.json
           json_exclude_regex: ^(main|test){1}net\/\d\/(?!metadata\.json$).*
           use_gitignore: false
+
+  validate-source-builder:
+    name: Validate the Source Builder 
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Publish the latest changes
+        run: |
+        CHANGED_FILES_PATH=$(git diff --name-only main)
+        echo $CHANGED_FILES_PATH

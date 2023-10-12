@@ -74,17 +74,17 @@ jobs:
           if [ -z "$SOURCE_BUILDER" ]; then
               continue
           fi
-          echo "metadata=$CONTENTS" >> $GITHUB_ENV
+          echo "::set-env name=METADATA::$CONTENTS"
       
       - name: Checkout source code
         uses: actions/checkout@v3
         with:
-          repository: ${{ needs.setmetadata.outputs.metadata.source.repository }}
-          ref: ${{ needs.setmetadata.outputs.metadata.source.tag }}
+          repository: $METADATA.source.repository
+          ref: $METADATA.source.tag
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Build the binary
         run: |
-          docker run --rm -v "$(pwd)":/code --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry   ${{ needs.setmetadata.outputs.metadata.source_builder.image }}:${{ needs.setmetadata.outputs.metadata.source_builder.tag }}
+          docker run --rm -v "$(pwd)":/code --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry  $METADATA.source_builder.image:$METADATA.source_builder.tag

@@ -69,8 +69,8 @@ jobs:
           if [ -z "$SOURCE" ]; then
               continue
           fi
-          SOURCE_REPO=$(cat ${{ matrix.file }} | jq -r '.source.repository' | sed 's/https:\/\/github.com\///' | cut -d '/' -f 1)
-          SOURCE_TAG=$(cat ${{ matrix.file }} | jq -r '.source.tag' | sed 's/https:\/\/github.com\///' | cut -d '/' -f 2)
+          SOURCE_REPO=$(cat ${{ matrix.file }} | jq -r '.source.repository' | sed 's/https:\/\/github.com\///')
+          SOURCE_TAG=$(cat ${{ matrix.file }} | jq -r '.source.tag')
           echo "source_repo=$SOURCE_REPO" >> $GITHUB_OUTPUT
           echo "source_tag=$SOURCE_TAG" >> $GITHUB_OUTPUT
 

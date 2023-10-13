@@ -87,6 +87,7 @@ jobs:
               FETCHED_CODE_ID=$(echo $CONTRACT | jq -r '.code_id')
               FETCHED_LABEL=$(echo $CONTRACT | jq -r '.label')
 
+              echo "➖ $ADDRESS"
               if [[ "$FETCHED_CODE_ID" != "$CODE_ID" ]]; then
                 echo "❌ Code ID mismatch for $LABEL ($ADDRESS): expected $CODE_ID, got $FETCHED_CODE_ID"
                 exit 1

@@ -75,11 +75,11 @@ jobs:
               continue
           fi
           #echo "metadata=$CONTENTS" >> $GITHUB_ENV
-          echo "variable1=value1" >> $GITHUB_STATE
+          echo "count=5" >> $GITHUB_STATE
 
       - name: Test
         run: |
-          echo ${{ steps.setmetadata.outputs.variable1 }} 
+          echo "The count was ${{ steps.setmetadata.outputs.count }}"
         
       
       # - name: Checkout source code

@@ -50,13 +50,13 @@ jobs:
         file: ${{ fromJSON(needs.get-modified-files.outputs.contracts_files) }}
 
     steps:
-      # Checkout just the path to the contracts file
       - name: Checking out ${{ matrix.file }}
         uses: actions/checkout@v3
 
       - name: Install check-jsonschema
         run: pip install check-jsonschema
 
+      # Check if the file matches our expected schema
       - name: Validate ${{ matrix.file }}
         run: check-jsonschema --schemafile schemas/contracts.schema.json ${{ matrix.file }} --color always
 
@@ -75,6 +75,7 @@ jobs:
         with:
             sparse-checkout: ${{ matrix.file }}
 
+      # Check if the given address has the same code id and label on mainnet as well
       - name: Validate ${{ matrix.file }} contents
         run: |
             jq -c '.[]' ${{ matrix.file }} | while read i; do

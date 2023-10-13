@@ -99,3 +99,9 @@ jobs:
       - name: Build the binary
         run: |
           docker run --rm -v "$(pwd)":/code --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry   ${{ steps.setmetadata.outputs.source_builder_image }}:${{ steps.setmetadata.outputs.source_builder_tag }}
+
+      - name: Fetch the contract checksum
+        run: |
+          CHECKSUMLINE=$(grep -n ${{ steps.setmetadata.outputs.source_builder_contract_name }} artifacts/checksums.txt )
+          CHECKSUM=$(echo $CHECKSUMLINE | cut -d ' ' -f 1)
+          echo $CHECKSUM

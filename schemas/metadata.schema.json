@@ -1,0 +1,66 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "code_id": {
+        "type": "integer"
+      },
+      "source": {
+        "type": "object",
+        "properties": {
+          "repository": {
+            "type": "string"
+          },
+          "tag": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "repository",
+          "tag",
+          "license"
+        ]
+      },
+      "source_builder": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "type": "string"
+          },
+          "tag": {
+            "type": "string"
+          },
+          "contract_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "image",
+          "tag",
+          "contract_name"
+        ]
+      },
+      "schema": {
+        "type": "string"
+      },
+      "contacts": {
+        "type": "array",
+        "items": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "required": [
+      "code_id",
+      "schema",
+      "contacts"
+    ]
+  }

@@ -1,0 +1,15 @@
+{
+    "code_id": 4,
+    "source": {
+        "repository": "https://github.com/DA0-DA0/dao-contracts",
+        "tag": "v2.1.0",
+        "license": "BSD 3-Clause"
+    },
+    "source_builder": {
+        "image": "cosmwasm/workspace-optimizer",
+        "tag": "0.12.11",
+        "contract_name": "dao_proposal_single.wasm"
+    },
+    "schema": "schema.json",
+    "contacts": []
+}

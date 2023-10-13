@@ -116,7 +116,8 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       # Run rust/workspace optimizer and gets the checksum of the resulting binary based on the given filename
-      - name: Build the binary and get checksum
+      - name: Build the binary and get checksum 
+        id: setchecksum
         run: |
           docker run --rm -v "$(pwd)":/code --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry   ${{ steps.setmetadata.outputs.source_builder_image }}:${{ steps.setmetadata.outputs.source_builder_tag }}
           CHECKSUMLINE=$(grep -h ${{ steps.setmetadata.outputs.source_builder_contract_name }} artifacts/checksums.txt )
@@ -128,7 +129,7 @@ jobs:
         run: |
           REST_URL=https://api.mainnet.archway.io/cosmwasm/wasm/v1/code/${{ steps.setmetadata.outputs.code_id }}
           HASH=$(curl -X GET $REST_URL -H  "accept: application/json" | jq -r '.code_info.data_hash' | tr '[:upper:]' '[:lower:]')
-          GENERATED_HASH=${{ steps.setmetadata.outputs.source_contract_checksum }}
+          GENERATED_HASH=${{ steps.setchecksum.outputs.source_contract_checksum }}
 
           echo "hash=$HASH" 
           echo "generated=$GENERATED_HASH" 

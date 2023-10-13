@@ -20,123 +20,125 @@ jobs:
           json_exclude_regex: ^(main|test){1}net\/\d\/(?!metadata\.json$).*
           use_gitignore: false
 
-  fetch-modified-metadata:
-    name: Fetch modified metadata
-    needs: [validate-json-schema]
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: read
+  ## Currently not running these as these are very time intensive 
 
-    steps:
-      # Get all the files which have been changed in this PR
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v39
+  # fetch-modified-metadata:
+  #   name: Fetch modified metadata
+  #   needs: [validate-json-schema]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     pull-requests: read
 
-      # Output all the files which were changed and match the path mainnet/*/metadata.json
-      # We only do this for mainnet as the optimization takes a long time. Not worth it for testnet imo
-      - name: Set changed metadata files
-        id: setfiles
-        run: |
-          FILES_ARRAY=""
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            FILE_NAME=$(basename $file)
-            if [ $FILE_NAME != "metadata.json" ]; then
-                continue
-            fi
-            NETWORK=$(echo $file | cut -d '/' -f 1)
-            if [[ "$NETWORK" == "mainnet" ]]; then
-              FILES_ARRAY+="$file,"
-            else
-              continue
-            fi
-          done
-          FILES_ARRAY=$(echo $FILES_ARRAY | jq -R -s -c 'split(",")[:-1]')
-          echo "metadata_files=${FILES_ARRAY}" >> $GITHUB_OUTPUT
-    outputs:
-      metadata_files: ${{ steps.setfiles.outputs.metadata_files }}
+  #   steps:
+  #     # Get all the files which have been changed in this PR
+  #     - name: Get changed files
+  #       id: changed-files
+  #       uses: tj-actions/changed-files@v39
 
-  build-binary:
-    name: Build binary
-    needs: [fetch-modified-metadata]
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        file: ${{ fromJSON(needs.fetch-modified-metadata.outputs.metadata_files) }}
+  #     # Output all the files which were changed and match the path mainnet/*/metadata.json
+  #     # We only do this for mainnet as the optimization takes a long time. Not worth it for testnet imo
+  #     - name: Set changed metadata files
+  #       id: setfiles
+  #       run: |
+  #         FILES_ARRAY=""
+  #         for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+  #           FILE_NAME=$(basename $file)
+  #           if [ $FILE_NAME != "metadata.json" ]; then
+  #               continue
+  #           fi
+  #           NETWORK=$(echo $file | cut -d '/' -f 1)
+  #           if [[ "$NETWORK" == "mainnet" ]]; then
+  #             FILES_ARRAY+="$file,"
+  #           else
+  #             continue
+  #           fi
+  #         done
+  #         FILES_ARRAY=$(echo $FILES_ARRAY | jq -R -s -c 'split(",")[:-1]')
+  #         echo "metadata_files=${FILES_ARRAY}" >> $GITHUB_OUTPUT
+  #   outputs:
+  #     metadata_files: ${{ steps.setfiles.outputs.metadata_files }}
 
-    steps:
-      # Checkout just the path to the metadata file
-      - name: Checking out ${{ matrix.file }}
-        uses: actions/checkout@v3
-        with:
-          sparse-checkout: ${{ matrix.file }}
+  # build-binary:
+  #   name: Build binary
+  #   needs: [fetch-modified-metadata]
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       file: ${{ fromJSON(needs.fetch-modified-metadata.outputs.metadata_files) }}
 
-      # Read the contents of the metadata file and output the contents as build variables
-      - name: Output contents of ${{ matrix.file }}
-        id: setmetadata
-        run: |
-          SOURCE=$(cat ${{ matrix.file }} | jq -r '.source')
-          if [ -z "$SOURCE" ]; then
-              echo "Source code details not provided. Skipping checksum verification."
-              exit 0
-              return
-          fi
-          SOURCE_REPO=$(cat ${{ matrix.file }} | jq -r '.source.repository' | sed 's/https:\/\/github.com\///')
-          SOURCE_TAG=$(cat ${{ matrix.file }} | jq -r '.source.tag')
-          echo "source_repo=$SOURCE_REPO" >> $GITHUB_OUTPUT
-          echo "source_tag=$SOURCE_TAG" >> $GITHUB_OUTPUT
+  #   steps:
+  #     # Checkout just the path to the metadata file
+  #     - name: Checking out ${{ matrix.file }}
+  #       uses: actions/checkout@v3
+  #       with:
+  #         sparse-checkout: ${{ matrix.file }}
 
-          SOURCE_BUILDER=$(cat ${{ matrix.file }} | jq -r '.source_builder')
-          if [ -z "$SOURCE_BUILDER" ]; then
-              echo "Source builder details not provided. Skipping checksum verification."
-              exit 0
-              return
-          fi
-          SOURCE_BUILDER_IMAGE=$(cat ${{ matrix.file }} | jq -r '.source_builder.image')
-          SOURCE_BUILDER_TAG=$(cat ${{ matrix.file }} | jq -r '.source_builder.tag')
-          SOURCE_BUILDER_CONTRACT_NAME=$(cat ${{ matrix.file }} | jq -r '.source_builder.contract_name')
-          echo "source_builder_image=$SOURCE_BUILDER_IMAGE" >> $GITHUB_OUTPUT
-          echo "source_builder_tag=$SOURCE_BUILDER_TAG" >> $GITHUB_OUTPUT
-          echo "source_builder_contract_name=$SOURCE_BUILDER_CONTRACT_NAME" >> $GITHUB_OUTPUT
+  #     # Read the contents of the metadata file and output the contents as build variables
+  #     - name: Output contents of ${{ matrix.file }}
+  #       id: setmetadata
+  #       run: |
+  #         SOURCE=$(cat ${{ matrix.file }} | jq -r '.source')
+  #         if [ -z "$SOURCE" ]; then
+  #             echo "Source code details not provided. Skipping checksum verification."
+  #             exit 0
+  #             return
+  #         fi
+  #         SOURCE_REPO=$(cat ${{ matrix.file }} | jq -r '.source.repository' | sed 's/https:\/\/github.com\///')
+  #         SOURCE_TAG=$(cat ${{ matrix.file }} | jq -r '.source.tag')
+  #         echo "source_repo=$SOURCE_REPO" >> $GITHUB_OUTPUT
+  #         echo "source_tag=$SOURCE_TAG" >> $GITHUB_OUTPUT
 
-          CODE_ID=$(cat ${{ matrix.file }} | jq -r '.code_id')
-          echo "code_id=$CODE_ID" >> $GITHUB_OUTPUT
+  #         SOURCE_BUILDER=$(cat ${{ matrix.file }} | jq -r '.source_builder')
+  #         if [ -z "$SOURCE_BUILDER" ]; then
+  #             echo "Source builder details not provided. Skipping checksum verification."
+  #             exit 0
+  #             return
+  #         fi
+  #         SOURCE_BUILDER_IMAGE=$(cat ${{ matrix.file }} | jq -r '.source_builder.image')
+  #         SOURCE_BUILDER_TAG=$(cat ${{ matrix.file }} | jq -r '.source_builder.tag')
+  #         SOURCE_BUILDER_CONTRACT_NAME=$(cat ${{ matrix.file }} | jq -r '.source_builder.contract_name')
+  #         echo "source_builder_image=$SOURCE_BUILDER_IMAGE" >> $GITHUB_OUTPUT
+  #         echo "source_builder_tag=$SOURCE_BUILDER_TAG" >> $GITHUB_OUTPUT
+  #         echo "source_builder_contract_name=$SOURCE_BUILDER_CONTRACT_NAME" >> $GITHUB_OUTPUT
 
-      # Checkout the source code provided in the metadata.json
-      - name: Checkout source code
-        id: checkoutcode
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ steps.setmetadata.outputs.source_repo }}
-          ref: ${{ steps.setmetadata.outputs.source_tag }}
+  #         CODE_ID=$(cat ${{ matrix.file }} | jq -r '.code_id')
+  #         echo "code_id=$CODE_ID" >> $GITHUB_OUTPUT
 
-      # Setup docker to be able to run contract optimizer 
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v2
+  #     # Checkout the source code provided in the metadata.json
+  #     - name: Checkout source code
+  #       id: checkoutcode
+  #       uses: actions/checkout@v3
+  #       with:
+  #         repository: ${{ steps.setmetadata.outputs.source_repo }}
+  #         ref: ${{ steps.setmetadata.outputs.source_tag }}
 
-      # Run rust/workspace optimizer and gets the checksum of the resulting binary based on the given filename
-      - name: Build the binary and get checksum 
-        id: setchecksum
-        run: |
-          docker run --rm -v "$(pwd)":/code --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry   ${{ steps.setmetadata.outputs.source_builder_image }}:${{ steps.setmetadata.outputs.source_builder_tag }}
-          CHECKSUMLINE=$(grep -h ${{ steps.setmetadata.outputs.source_builder_contract_name }} artifacts/checksums.txt )
-          CHECKSUM=$(echo $CHECKSUMLINE | cut -d ' ' -f 1)
-          echo "source_contract_checksum=$CHECKSUM" >> $GITHUB_OUTPUT
+  #     # Setup docker to be able to run contract optimizer 
+  #     - name: Setup Docker Buildx
+  #       uses: docker/setup-buildx-action@v2
 
-      # Fetches the code hash from the network and compares it to the generated checksum
-      - name: Verify checksums
-        run: |
-          REST_URL=https://api.mainnet.archway.io/cosmwasm/wasm/v1/code/${{ steps.setmetadata.outputs.code_id }}
-          HASH=$(curl -X GET $REST_URL -H  "accept: application/json" | jq -r '.code_info.data_hash' | tr '[:upper:]' '[:lower:]')
-          GENERATED_HASH=${{ steps.setchecksum.outputs.source_contract_checksum }}
+  #     # Run rust/workspace optimizer and gets the checksum of the resulting binary based on the given filename
+  #     - name: Build the binary and get checksum 
+  #       id: setchecksum
+  #       run: |
+  #         docker run --rm -v "$(pwd)":/code --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry   ${{ steps.setmetadata.outputs.source_builder_image }}:${{ steps.setmetadata.outputs.source_builder_tag }}
+  #         CHECKSUMLINE=$(grep -h ${{ steps.setmetadata.outputs.source_builder_contract_name }} artifacts/checksums.txt )
+  #         CHECKSUM=$(echo $CHECKSUMLINE | cut -d ' ' -f 1)
+  #         echo "source_contract_checksum=$CHECKSUM" >> $GITHUB_OUTPUT
 
-          echo "hash=$HASH" 
-          echo "generated=$GENERATED_HASH" 
+  #     # Fetches the code hash from the network and compares it to the generated checksum
+  #     - name: Verify checksums
+  #       run: |
+  #         REST_URL=https://api.mainnet.archway.io/cosmwasm/wasm/v1/code/${{ steps.setmetadata.outputs.code_id }}
+  #         HASH=$(curl -X GET $REST_URL -H  "accept: application/json" | jq -r '.code_info.data_hash' | tr '[:upper:]' '[:lower:]')
+  #         GENERATED_HASH=${{ steps.setchecksum.outputs.source_contract_checksum }}
 
-          if [[ "$HASH" == "$GENERATED_HASH" ]]; then
-            echo "The strings are the same"
-          else
-            echo "The hashes do not match"
-            exit 1
-          fi
+  #         echo "hash=$HASH" 
+  #         echo "generated=$GENERATED_HASH" 
+
+  #         if [[ "$HASH" == "$GENERATED_HASH" ]]; then
+  #           echo "The strings are the same"
+  #         else
+  #           echo "The hashes do not match"
+  #           exit 1
+  #         fi

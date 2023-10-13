@@ -60,8 +60,6 @@
     },
     "required": [
       "code_id",
-      "source",
-      "source_builder",
       "schema",
       "contacts"
     ]

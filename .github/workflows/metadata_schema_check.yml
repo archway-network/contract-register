@@ -15,6 +15,7 @@ jobs:
       - name: Validate JSON
         uses: GrantBirki/json-yaml-validate@v2.3.1
         with:
+          base_dir: mainnet
           json_schema: ./schemas/metadata.schema.json
           json_exclude_regex: ^(main|test){1}net\/\d\/(?!metadata\.json$).*
           use_gitignore: false

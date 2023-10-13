@@ -70,25 +70,29 @@ jobs:
           if [ -z "$SOURCE" ]; then
               continue
           fi
+          SOURCE_REPO=$(cat ${{ matrix.file }} | jq -r '.source.repository')
+          SOURCE_TAG=$(cat ${{ matrix.file }} | jq -r '.source.tag')
           SOURCE_BUILDER=$(cat ${{ matrix.file }} | jq -r '.source_builder')
           if [ -z "$SOURCE_BUILDER" ]; then
               continue
           fi
           echo "count=5" >> $GITHUB_OUTPUT
           echo "count2=51" >> $GITHUB_OUTPUT
+          echo "source_repo=$SOURCE_REPO" >> $GITHUB_OUTPUT
+          echo "source_tag=$SOURCE_TAG" >> $GITHUB_OUTPUT
 
       - name: Test
         run: |
-          echo "The count was ${{ steps.setmetadata.outputs.count }}"
-          echo "The count was ${{ steps.setmetadata.outputs.count2 }}"
+          echo "The count was ${{ steps.setmetadata.outputs.source_repo }}"
+          echo "The count was ${{ steps.setmetadata.outputs.source_tag }}"
         
       
-      # - name: Checkout source code
-      #   id: checkoutcode
-      #   uses: actions/checkout@v3
-      #   with:
-      #     repository: ${{ needs.setmetadata.outputs.metadata.source.repository }}
-      #     ref: ${{ needs.setmetadata.outputs.metadata.source.tag }}
+      - name: Checkout source code
+        id: checkoutcode
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ needs.setmetadata.outputs.metadata.source.repository }}
+          ref: ${{ needs.setmetadata.outputs.metadata.source.tag }}
 
       # - name: Setup Docker Buildx
       #   uses: docker/setup-buildx-action@v2

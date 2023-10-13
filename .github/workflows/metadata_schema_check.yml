@@ -65,37 +65,30 @@ jobs:
       - name: Output contents of ${{ matrix.file }}
         id: setmetadata
         run: |
-          CONTENTS=$(cat ${{ matrix.file }})
           SOURCE=$(cat ${{ matrix.file }} | jq -r '.source')
           if [ -z "$SOURCE" ]; then
               continue
           fi
           SOURCE_REPO=$(cat ${{ matrix.file }} | jq -r '.source.repository')
           SOURCE_TAG=$(cat ${{ matrix.file }} | jq -r '.source.tag')
+          echo "source_repo=$SOURCE_REPO" >> $GITHUB_OUTPUT
+          echo "source_tag=$SOURCE_TAG" >> $GITHUB_OUTPUT
+
           SOURCE_BUILDER=$(cat ${{ matrix.file }} | jq -r '.source_builder')
           if [ -z "$SOURCE_BUILDER" ]; then
               continue
           fi
-          echo "count=5" >> $GITHUB_OUTPUT
-          echo "count2=51" >> $GITHUB_OUTPUT
-          echo "source_repo=$SOURCE_REPO" >> $GITHUB_OUTPUT
-          echo "source_tag=$SOURCE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Test
-        run: |
-          echo "The count was ${{ steps.setmetadata.outputs.source_repo }}"
-          echo "The count was ${{ steps.setmetadata.outputs.source_tag }}"
-        
       
       - name: Checkout source code
         id: checkoutcode
         uses: actions/checkout@v3
         with:
-          repository: ${{ needs.setmetadata.outputs.metadata.source.repository }}
-          ref: ${{ needs.setmetadata.outputs.metadata.source.tag }}
+          repository: ${{ steps.setmetadata.outputs.source_repo }}
+          ref: ${{ steps.setmetadata.outputs.source_tag }}
 
-      # - name: Setup Docker Buildx
-      #   uses: docker/setup-buildx-action@v2
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
       # - name: Build the binary
       #   run: |

@@ -74,8 +74,7 @@ jobs:
           if [ -z "$SOURCE_BUILDER" ]; then
               continue
           fi
-          #echo "metadata=$CONTENTS" >> $GITHUB_ENV
-          echo "count=5" >> $GITHUB_STATE
+          echo "count=5" >> $GITHUB_OUTPUT
 
       - name: Test
         run: |

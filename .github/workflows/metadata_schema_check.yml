@@ -75,14 +75,12 @@ jobs:
               continue
           fi
           #echo "metadata=$CONTENTS" >> $GITHUB_ENV
-          echo "::set-output name=variable1::value1"
-          echo "::set-output name=variable2::value2"
+          echo "variable1=value1" >> $GITHUB_STATE
 
       - name: Test
         run: |
-          echo ${{ steps.setvariables.outputs.variable1 }} 
+          echo ${{ steps.setmetadata.outputs.variable1 }} 
         
-          echo ${{ steps.setvariables.outputs.variable1 }}  
       
       # - name: Checkout source code
       #   id: checkoutcode

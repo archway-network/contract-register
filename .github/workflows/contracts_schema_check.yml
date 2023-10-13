@@ -88,14 +88,16 @@ jobs:
               FETCHED_LABEL=$(echo $CONTRACT | jq -r '.label')
 
               if [[ "$FETCHED_CODE_ID" != "$CODE_ID" ]]; then
-                echo "Code ID mismatch for $LABEL ($ADDRESS): expected $CODE_ID, got $FETCHED_CODE_ID"
+                echo "❌ Code ID mismatch for $LABEL ($ADDRESS): expected $CODE_ID, got $FETCHED_CODE_ID"
                 exit 1
                 return
               fi
+              echo "✅ Code ID matched: $FETCHED_CODE_ID"
 
               if [[ "$FETCHED_LABEL" != "$LABEL" ]]; then
-                echo "Label mismatch for $LABEL ($ADDRESS): expected $LABEL, got $FETCHED_LABEL"
+                echo "❌ Label mismatch for $LABEL ($ADDRESS): expected $LABEL, got $FETCHED_LABEL"
                 exit 1
                 return
               fi
+              echo "✅ Contract Label matched: $FETCHED_LABEL"
             done

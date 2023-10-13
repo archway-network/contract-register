@@ -41,7 +41,7 @@ jobs:
       contracts_files: ${{ steps.setfiles.outputs.contracts_files }}
 
   validate-json:
-    name: Validate contracts.json
+    name: Validate ${{ matrix.file }}
     needs: [get-modified-files]
     runs-on: ubuntu-latest
     strategy:
@@ -59,3 +59,43 @@ jobs:
 
       - name: Validate ${{ matrix.file }}
         run: check-jsonschema --schemafile schemas/contracts.schema.json ${{ matrix.file }} --color always
+
+  validate-instances:
+    name: Validate contract instances
+    needs: [get-modified-files]
+    runs-on: ubuntu-latest
+    strategy:
+        fail-fast: false
+        matrix:
+          file: ${{ fromJSON(needs.get-modified-files.outputs.contracts_files) }}
+
+    steps:
+      - name: Checking out ${{ matrix.file }}
+        uses: actions/checkout@v3
+        with:
+            sparse-checkout: ${{ matrix.file }}
+
+      - name: Validate ${{ matrix.file }} contents
+        run: |
+            jq -c '.[]' ${{ matrix.file }} | while read i; do
+              ADDRESS=$(echo $i | jq -r '.address')
+              LABEL=$(echo $i | jq -r '.label')
+              CODE_ID=$(echo "${{ matrix.file }}" | cut -d'/' -f2)
+
+              REST_URL=https://api.mainnet.archway.io/cosmwasm/wasm/v1/contract/${ADDRESS}
+              CONTRACT=$(curl -X GET $REST_URL -H  "accept: application/json" | jq -r '.contract_info')
+              FETCHED_CODE_ID=$(echo $CONTRACT | jq -r '.code_id')
+              FETCHED_LABEL=$(echo $CONTRACT | jq -r '.label')
+
+              if [[ "$FETCHED_CODE_ID" != "$CODE_ID" ]]; then
+                echo "Code ID mismatch for $LABEL ($ADDRESS): expected $CODE_ID, got $FETCHED_CODE_ID"
+                exit 1
+                return
+              fi
+
+              if [[ "$FETCHED_LABEL" != "$LABEL" ]]; then
+                echo "Label mismatch for $LABEL ($ADDRESS): expected $LABEL, got $FETCHED_LABEL"
+                exit 1
+                return
+              fi
+            done

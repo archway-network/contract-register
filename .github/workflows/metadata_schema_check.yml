@@ -7,17 +7,26 @@ on:
 
 jobs:
   validate-json-schema:
-    name: Validate the Metadata JSON schema
+    name: Validate JSON schemas
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3  
-      - name: Validate JSON
+
+      - name: Validate metadata.json
         uses: GrantBirki/json-yaml-validate@v2.3.1
         with:
           base_dir: mainnet
           json_schema: ./schemas/metadata.schema.json
           json_exclude_regex: ^(main|test){1}net\/\d\/(?!metadata\.json$).*
+          use_gitignore: false
+
+      - name: Validate contracts.json
+        uses: GrantBirki/json-yaml-validate@v2.3.1
+        with:
+          base_dir: mainnet
+          json_schema: ./schemas/contracts.schema.json
+          json_exclude_regex: ^(main|test){1}net\/\d\/(?!contracts\.json$).*
           use_gitignore: false
 
   ## Currently not running these as these are very time intensive 

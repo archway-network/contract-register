@@ -1,66 +1,80 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "type": "object",
-    "properties": {
-      "code_id": {
-        "type": "integer"
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$ref": "#/definitions/CodeMetadata",
+  "definitions": {
+      "CodeMetadata": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+              "code_id": {
+                  "type": "integer"
+              },
+              "source": {
+                  "$ref": "#/definitions/Source"
+              },
+              "source_builder": {
+                  "$ref": "#/definitions/SourceBuilder"
+              },
+              "schema": {
+                  "type": "string"
+              },
+              "contacts": {
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  }
+              }
+          },
+          "required": [
+              "code_id",
+              "schema"
+          ],
+          "title": "CodeMetadata"
       },
-      "source": {
-        "type": "object",
-        "properties": {
-          "repository": {
-            "type": "string"
+      "Source": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+              "repository": {
+                  "type": "string",
+                  "format": "uri",
+                  "qt-uri-protocols": [
+                      "https"
+                  ]
+              },
+              "tag": {
+                  "type": "string"
+              },
+              "license": {
+                  "type": "string"
+              }
           },
-          "tag": {
-            "type": "string"
-          },
-          "license": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "repository",
-          "tag",
-          "license"
-        ]
+          "required": [
+              "repository",
+              "tag"
+          ],
+          "title": "Source"
       },
-      "source_builder": {
-        "type": "object",
-        "properties": {
-          "image": {
-            "type": "string"
+      "SourceBuilder": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+              "image": {
+                  "type": "string"
+              },
+              "tag": {
+                  "type": "string"
+              },
+              "contract_name": {
+                  "type": "string"
+              }
           },
-          "tag": {
-            "type": "string"
-          },
-          "contract_name": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "image",
-          "tag",
-          "contract_name"
-        ]
-      },
-      "schema": {
-        "type": "string"
-      },
-      "contacts": {
-        "type": "array",
-        "items": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "string"
-          }
-        ]
+          "required": [
+              "contract_name",
+              "image",
+              "tag"
+          ],
+          "title": "SourceBuilder"
       }
-    },
-    "required": [
-      "code_id",
-      "schema",
-      "contacts"
-    ]
   }
+}

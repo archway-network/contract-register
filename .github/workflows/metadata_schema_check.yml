@@ -44,6 +44,7 @@ jobs:
     name: Validate ${{ matrix.file }}
     needs: [get-modified-files]
     runs-on: ubuntu-latest
+    if: ${{ needs.get-modified-files.outputs.metadata_files != '[]' && needs.get-modified-files.outputs.metadata_files != '' }}
     strategy:
       fail-fast: false
       matrix: 

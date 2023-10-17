@@ -65,6 +65,7 @@ jobs:
     name: Validate contract instances
     needs: [get-modified-files]
     runs-on: ubuntu-latest
+    if: ${{ needs.get-modified-files.outputs.contracts_files != '[]' && needs.get-modified-files.outputs.contracts_files != '' }}
     strategy:
         fail-fast: false
         matrix:

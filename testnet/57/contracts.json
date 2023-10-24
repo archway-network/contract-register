@@ -1,6 +1,6 @@
 [
     {
-      "label": "AID NFT token contract v1.0.0",
+      "label": "archid-token-constantine-3 v1.01",
       "address": "archway146htsfvftmq8fl26977w9xgdwmsptr2quuf7yyra4j0gttx32z3secq008",
       "memo": "ArchID NFT token contract, with cw721-updatable metadata"
     }

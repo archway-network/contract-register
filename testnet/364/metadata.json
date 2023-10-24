@@ -1,0 +1,17 @@
+{
+    "code_id": 364,
+    "source": {
+        "repository": "https://github.com/archid-protocol/archid-registry",
+        "license": "Apache-2.0"
+    },
+    "source_builder": {
+        "image": "cosmwasm/rust-optimizer",
+        "tag": "0.12.5",
+        "contract_name": "archid_registry.wasm"
+    },
+    "schema": "schema.json",
+    "contacts": [
+        "archid.protocol@gmail.com",
+	"drew.taylor@philabs.xyz"
+    ]
+}

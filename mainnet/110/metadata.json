@@ -1,15 +1,5 @@
 {
     "code_id": 110,
-    "source": {
-        "repository": "https://github.com/noislabs/nois-contracts",
-        "tag": "",
-        "license": "Apache License 2.0"
-    },
-    "source_builder": {
-        "image": "cosmwasm/workspace-optimizer",
-        "tag": "",
-        "contract_name": "nois_proxy.wasm"
-    },
-    "schema": "",
+    "schema": "schema.json",
     "contacts": []
 }

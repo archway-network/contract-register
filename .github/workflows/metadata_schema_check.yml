@@ -59,7 +59,7 @@ jobs:
 
       # Check if the file matches our expected schema
       - name: Validate ${{ matrix.file }}
-        run: check-jsonschema --schema-file schemas/metadata.schema.json ${{ matrix.file }} --color always
+        run: check-jsonschema --schemafile schemas/metadata.schema.json ${{ matrix.file }} --color always
 
   ## Currently not running these as these are very time intensive 
 

@@ -1,0 +1,903 @@
+{
+  "contract_name": "nois-proxy",
+  "contract_version": "0.13.8",
+  "idl_version": "1.0.0",
+  "instantiate": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "InstantiateMsg",
+    "type": "object",
+    "required": [
+      "callback_gas_limit",
+      "mode",
+      "prices"
+    ],
+    "properties": {
+      "allowlist": {
+        "description": "List of addresses allowed to get randomness. This is optional and can be omitted. Defaults to an empty list.",
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "string"
+        }
+      },
+      "allowlist_enabled": {
+        "description": "Toggle caller allowlist allowed to get randomness. This is optional and can be omitted. Defaults to false.",
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "callback_gas_limit": {
+        "description": "The amount of gas that the callback to the dapp can consume",
+        "type": "integer",
+        "format": "uint64",
+        "minimum": 0.0
+      },
+      "manager": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "mode": {
+        "$ref": "#/definitions/OperationalMode"
+      },
+      "prices": {
+        "description": "The prices of a randomness. List is to be interpreted as oneof, i.e. payment must be paid in one of those denominations. If this list is empty, the user cannot pay. This can be used to put the contract out of service.",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Coin"
+        }
+      },
+      "test_mode": {
+        "description": "In test mode the min publish time calculation is detached from the clock. This is for testing only. Setting the field to `None` equals `Some(false)`. Using an optional type allows omitting the field in JSON instantiation messages.",
+        "type": [
+          "boolean",
+          "null"
+        ]
+      }
+    },
+    "additionalProperties": false,
+    "definitions": {
+      "Coin": {
+        "type": "object",
+        "required": [
+          "amount",
+          "denom"
+        ],
+        "properties": {
+          "amount": {
+            "$ref": "#/definitions/Uint128"
+          },
+          "denom": {
+            "type": "string"
+          }
+        }
+      },
+      "IbcDenom": {
+        "description": "The denom information required to send a MsgTransfer. Ideally we could just query the ICS-20 channel ID and did not have to store it, but CosmWasm currently does not provide the query for it.",
+        "type": "object",
+        "required": [
+          "denom",
+          "ics20_channel"
+        ],
+        "properties": {
+          "denom": {
+            "description": "The ibc/* denom for the token",
+            "type": "string"
+          },
+          "ics20_channel": {
+            "description": "The ICS-20 channel ID of the NOIS token on the consummer chain",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OperationalMode": {
+        "description": "Defines how the proxy handles payment of its randomness requests. This only affects the proxy-Nois side. Users of the proxy always have to pay the amount set in `prices`.",
+        "oneOf": [
+          {
+            "description": "Someone fills the payment contract of the proxy on behalf of the proxy. This can happen onchain or offchain, automated or manually.",
+            "type": "object",
+            "required": [
+              "funded"
+            ],
+            "properties": {
+              "funded": {
+                "type": "object",
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "description": "Proxy contract sends IBCed NOIS to the gateway for each beacon request.",
+            "type": "object",
+            "required": [
+              "ibc_pay"
+            ],
+            "properties": {
+              "ibc_pay": {
+                "type": "object",
+                "required": [
+                  "unois_denom"
+                ],
+                "properties": {
+                  "unois_denom": {
+                    "description": "The denom of the IBCed unois token",
+                    "allOf": [
+                      {
+                        "$ref": "#/definitions/IbcDenom"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "Uint128": {
+        "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+        "type": "string"
+      }
+    }
+  },
+  "execute": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ExecuteMsg",
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "get_next_randomness"
+        ],
+        "properties": {
+          "get_next_randomness": {
+            "type": "object",
+            "required": [
+              "job_id"
+            ],
+            "properties": {
+              "job_id": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "get_randomness_after"
+        ],
+        "properties": {
+          "get_randomness_after": {
+            "type": "object",
+            "required": [
+              "after",
+              "job_id"
+            ],
+            "properties": {
+              "after": {
+                "$ref": "#/definitions/Timestamp"
+              },
+              "job_id": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Set the config",
+        "type": "object",
+        "required": [
+          "set_config"
+        ],
+        "properties": {
+          "set_config": {
+            "type": "object",
+            "properties": {
+              "allowlist_enabled": {
+                "description": "Toggle address allowlist to get randomness. When enabled, the allowlist is checked. Otherwise the allowlist entries are ignored.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "callback_gas_limit": {
+                "description": "The amount of gas that the callback to the dapp can consume",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint64",
+                "minimum": 0.0
+              },
+              "manager": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "max_after": {
+                "description": "The maximum value for `after` when requesting a beacon. This aims to counter accidental misusage. Not all values in the allowed range are reasonable.",
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Timestamp"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "min_after": {
+                "description": "The minimal value for `after` when requesting a beacon. This aims to counter accidental misusage. Not all values in the allowed range are reasonable.",
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Timestamp"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "mode": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/OperationalMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "nois_beacon_price": {
+                "description": "The amount of tokens the proxy sends for each randomness request to the Nois chain",
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Uint128"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "payment": {
+                "description": "Address of the payment contract (on the other chain)",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "prices": {
+                "description": "The prices of a randomness. List is to be interpreted as oneof, i.e. payment must be paid in one of those denominations. If this list is empty, the user cannot pay. This can be used to put the contract out of service.",
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "$ref": "#/definitions/Coin"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "withdraw"
+        ],
+        "properties": {
+          "withdraw": {
+            "type": "object",
+            "required": [
+              "address",
+              "denom"
+            ],
+            "properties": {
+              "address": {
+                "type": "string"
+              },
+              "amount": {
+                "description": "The amount of tokens to withdraw. If None, withdraw all available balance of the given denom.",
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Uint128"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "denom": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "update_allowlist"
+        ],
+        "properties": {
+          "update_allowlist": {
+            "type": "object",
+            "required": [
+              "add",
+              "remove"
+            ],
+            "properties": {
+              "add": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "remove": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    ],
+    "definitions": {
+      "Coin": {
+        "type": "object",
+        "required": [
+          "amount",
+          "denom"
+        ],
+        "properties": {
+          "amount": {
+            "$ref": "#/definitions/Uint128"
+          },
+          "denom": {
+            "type": "string"
+          }
+        }
+      },
+      "IbcDenom": {
+        "description": "The denom information required to send a MsgTransfer. Ideally we could just query the ICS-20 channel ID and did not have to store it, but CosmWasm currently does not provide the query for it.",
+        "type": "object",
+        "required": [
+          "denom",
+          "ics20_channel"
+        ],
+        "properties": {
+          "denom": {
+            "description": "The ibc/* denom for the token",
+            "type": "string"
+          },
+          "ics20_channel": {
+            "description": "The ICS-20 channel ID of the NOIS token on the consummer chain",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OperationalMode": {
+        "description": "Defines how the proxy handles payment of its randomness requests. This only affects the proxy-Nois side. Users of the proxy always have to pay the amount set in `prices`.",
+        "oneOf": [
+          {
+            "description": "Someone fills the payment contract of the proxy on behalf of the proxy. This can happen onchain or offchain, automated or manually.",
+            "type": "object",
+            "required": [
+              "funded"
+            ],
+            "properties": {
+              "funded": {
+                "type": "object",
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "description": "Proxy contract sends IBCed NOIS to the gateway for each beacon request.",
+            "type": "object",
+            "required": [
+              "ibc_pay"
+            ],
+            "properties": {
+              "ibc_pay": {
+                "type": "object",
+                "required": [
+                  "unois_denom"
+                ],
+                "properties": {
+                  "unois_denom": {
+                    "description": "The denom of the IBCed unois token",
+                    "allOf": [
+                      {
+                        "$ref": "#/definitions/IbcDenom"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "Timestamp": {
+        "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
+        "allOf": [
+          {
+            "$ref": "#/definitions/Uint64"
+          }
+        ]
+      },
+      "Uint128": {
+        "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+        "type": "string"
+      },
+      "Uint64": {
+        "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
+        "type": "string"
+      }
+    }
+  },
+  "query": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "QueryMsg",
+    "oneOf": [
+      {
+        "description": "Get the config state",
+        "type": "object",
+        "required": [
+          "config"
+        ],
+        "properties": {
+          "config": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Get the prices.",
+        "type": "object",
+        "required": [
+          "prices"
+        ],
+        "properties": {
+          "prices": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Get the price in one particular denom. Returns None when denom is not accepted.",
+        "type": "object",
+        "required": [
+          "price"
+        ],
+        "properties": {
+          "price": {
+            "type": "object",
+            "required": [
+              "denom"
+            ],
+            "properties": {
+              "denom": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Queries the local channel ID that is used to request beacons. This channel is unset when the proxy is instantiated and will be set when the channel is created. Once created, the value does not change anymore.",
+        "type": "object",
+        "required": [
+          "gateway_channel"
+        ],
+        "properties": {
+          "gateway_channel": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Returns the list of allowed dapp addresses",
+        "type": "object",
+        "required": [
+          "allowlist"
+        ],
+        "properties": {
+          "allowlist": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Queries whether the given address is part of the proxy's allowlist. Whether or not the allowlist is enabled must be queried via the config.",
+        "type": "object",
+        "required": [
+          "is_allowlisted"
+        ],
+        "properties": {
+          "is_allowlisted": {
+            "type": "object",
+            "required": [
+              "address"
+            ],
+            "properties": {
+              "address": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    ]
+  },
+  "migrate": null,
+  "sudo": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "SudoMsg",
+    "type": "string",
+    "enum": []
+  },
+  "responses": {
+    "allowlist": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AllowlistResponse",
+      "type": "object",
+      "required": [
+        "allowed"
+      ],
+      "properties": {
+        "allowed": {
+          "description": "List of addresses",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "config": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ConfigResponse",
+      "type": "object",
+      "required": [
+        "config"
+      ],
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/Config"
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Addr": {
+          "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+          "type": "string"
+        },
+        "Coin": {
+          "type": "object",
+          "required": [
+            "amount",
+            "denom"
+          ],
+          "properties": {
+            "amount": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "denom": {
+              "type": "string"
+            }
+          }
+        },
+        "Config": {
+          "type": "object",
+          "required": [
+            "callback_gas_limit",
+            "mode",
+            "nois_beacon_price",
+            "nois_beacon_price_updated",
+            "prices",
+            "test_mode"
+          ],
+          "properties": {
+            "allowlist_enabled": {
+              "description": "Enable whitelist of addresses allowed to get randomness. This is an Option for compatibility with older versions of the contract. If set to None it means disabled. From instances running version 0.13.5 onwards, the value is always set to Some(..).",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "callback_gas_limit": {
+              "description": "The amount of gas that the callback to the dapp can consume",
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            },
+            "manager": {
+              "description": "Manager to set the config and withdraw funds",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Addr"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "max_after": {
+              "description": "The maximum value for `after` when requesting a beacon. This aims to counter accidental misusage. Not all values in the allowed range are reasonable. This is an Option for compatibility with older versions of the contract that did not have the field. From instances running version 0.13.5 onwards, the value is always set to Some(..).",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "min_after": {
+              "description": "The minimal value for `after` when requesting a beacon. This aims to counter accidental misusage. Not all values in the allowed range are reasonable. This is an Option for compatibility with older versions of the contract that did not have the field. From instances running version 0.13.5 onwards, the value is always set to Some(..).",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "mode": {
+              "$ref": "#/definitions/OperationalMode"
+            },
+            "nois_beacon_price": {
+              "description": "The amount of tokens the proxy sends for each randomness request to the Nois chain",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            },
+            "nois_beacon_price_updated": {
+              "description": "The time (on the Nois chain) the price info was created",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Timestamp"
+                }
+              ]
+            },
+            "payment": {
+              "description": "Address of the payment contract (on the other chain)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "prices": {
+              "description": "The prices of a randomness. List is to be interpreted as oneof, i.e. payment must be paid in one of those denominations. If this list is empty, the user cannot pay. This can be used to put the contract out of service.",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Coin"
+              }
+            },
+            "test_mode": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "IbcDenom": {
+          "description": "The denom information required to send a MsgTransfer. Ideally we could just query the ICS-20 channel ID and did not have to store it, but CosmWasm currently does not provide the query for it.",
+          "type": "object",
+          "required": [
+            "denom",
+            "ics20_channel"
+          ],
+          "properties": {
+            "denom": {
+              "description": "The ibc/* denom for the token",
+              "type": "string"
+            },
+            "ics20_channel": {
+              "description": "The ICS-20 channel ID of the NOIS token on the consummer chain",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "OperationalMode": {
+          "description": "Defines how the proxy handles payment of its randomness requests. This only affects the proxy-Nois side. Users of the proxy always have to pay the amount set in `prices`.",
+          "oneOf": [
+            {
+              "description": "Someone fills the payment contract of the proxy on behalf of the proxy. This can happen onchain or offchain, automated or manually.",
+              "type": "object",
+              "required": [
+                "funded"
+              ],
+              "properties": {
+                "funded": {
+                  "type": "object",
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "description": "Proxy contract sends IBCed NOIS to the gateway for each beacon request.",
+              "type": "object",
+              "required": [
+                "ibc_pay"
+              ],
+              "properties": {
+                "ibc_pay": {
+                  "type": "object",
+                  "required": [
+                    "unois_denom"
+                  ],
+                  "properties": {
+                    "unois_denom": {
+                      "description": "The denom of the IBCed unois token",
+                      "allOf": [
+                        {
+                          "$ref": "#/definitions/IbcDenom"
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "Timestamp": {
+          "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Uint64"
+            }
+          ]
+        },
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        },
+        "Uint64": {
+          "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "gateway_channel": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "GatewayChannelResponse",
+      "type": "object",
+      "properties": {
+        "channel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "is_allowlisted": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "IsAllowlistedResponse",
+      "type": "object",
+      "required": [
+        "listed"
+      ],
+      "properties": {
+        "listed": {
+          "description": "Returns true if and only if the address is part of the proxy's allowlist. Whether or not the allowlist is enabled must be queried via the config.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "price": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PriceResponse",
+      "type": "object",
+      "properties": {
+        "price": {
+          "description": "Price for the requested denom",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Uint128"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "prices": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PricesResponse",
+      "type": "object",
+      "required": [
+        "prices"
+      ],
+      "properties": {
+        "prices": {
+          "description": "Prices are encoded in a one-of list.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Coin"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Coin": {
+          "type": "object",
+          "required": [
+            "amount",
+            "denom"
+          ],
+          "properties": {
+            "amount": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "denom": {
+              "type": "string"
+            }
+          }
+        },
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

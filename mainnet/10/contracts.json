@@ -1,0 +1,7 @@
+[
+    {
+      "label": "archid-token v1",
+      "address": "archway1cf5rq0amcl5m2flqrtl4gw2mdl3zdec9vlp5hfa9hgxlwnmrlazsdycu4l",
+      "memo": "ArchID NFT token contract, with cw721-updatable metadata"
+    }
+]
